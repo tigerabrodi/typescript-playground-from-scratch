@@ -1,6 +1,7 @@
 import * as monaco from "monaco-editor";
 import * as ts from "typescript";
 import { useEffect, useRef } from "react";
+import { debounce } from "./debounce";
 
 export function App() {
   const typescriptEditorRef = useRef<HTMLDivElement>(null);
@@ -21,9 +22,12 @@ export function App() {
         },
       });
 
-      tsEditor.onDidChangeModelContent(() => {
-        compileTypeScript(tsEditor.getValue());
-      });
+      const debouncedCompile = debounce(
+        () => compileTypeScript(tsEditor.getValue()),
+        500
+      );
+
+      tsEditor.onDidChangeModelContent(debouncedCompile);
     }
 
     if (javascriptDisplayRef.current) {
