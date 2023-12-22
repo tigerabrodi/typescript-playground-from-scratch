@@ -1,4 +1,5 @@
 import * as monaco from "monaco-editor";
+import * as ts from "typescript";
 import { useEffect, useRef } from "react";
 
 export function App() {
@@ -18,6 +19,10 @@ export function App() {
           enabled: true,
         },
       });
+
+      tsEditor.onDidChangeModelContent(() => {
+        compileTypeScript(tsEditor.getValue());
+      });
     }
 
     if (javascriptDisplayRef.current) {
@@ -32,15 +37,18 @@ export function App() {
       });
     }
 
+    const compileTypeScript = (code: string) => {
+      const result = ts.transpileModule(code, {
+        compilerOptions: { module: ts.ModuleKind.CommonJS },
+      });
+      jsDisplay.getModel()?.setValue(result.outputText);
+    };
+
     return () => {
       tsEditor?.dispose();
       jsDisplay?.dispose();
     };
   }, []);
-
-  console.log({
-    typescriptEditorRef: typescriptEditorRef.current,
-  });
 
   return (
     <main className="h-full w-full flex flex-col items-center p-12 bg-slate-400">
