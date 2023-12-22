@@ -15,6 +15,7 @@ export function App() {
         language: "typescript",
         theme: "vs-dark",
         fontSize: 18,
+        wordWrap: "on",
         minimap: {
           enabled: true,
         },
@@ -31,6 +32,7 @@ export function App() {
         readOnly: true,
         theme: "vs-dark",
         fontSize: 18,
+        wordWrap: "on",
         minimap: {
           enabled: true,
         },
@@ -38,10 +40,33 @@ export function App() {
     }
 
     const compileTypeScript = (code: string) => {
-      const result = ts.transpileModule(code, {
-        compilerOptions: { module: ts.ModuleKind.CommonJS },
-      });
-      jsDisplay.getModel()?.setValue(result.outputText);
+      try {
+        const result = ts.transpileModule(code, {
+          compilerOptions: { module: ts.ModuleKind.CommonJS },
+          reportDiagnostics: true,
+        });
+
+        // Check for compilation errors
+        if (result.diagnostics && result.diagnostics.length > 0) {
+          const errors = result.diagnostics
+            .map((diagnostic) => {
+              const message = ts.flattenDiagnosticMessageText(
+                diagnostic.messageText,
+                "\n"
+              );
+              return `Error: ${message}`;
+            })
+            .join("\n");
+
+          // Display errors
+          jsDisplay.getModel()?.setValue(errors);
+        } else {
+          // No errors, display JavaScript
+          jsDisplay.getModel()?.setValue(result.outputText);
+        }
+      } catch (error) {
+        jsDisplay.getModel()?.setValue(`Compilation Error: ${error}`);
+      }
     };
 
     return () => {
